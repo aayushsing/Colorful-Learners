@@ -6,14 +6,15 @@
   <title>Magic Letters & Numbers</title>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
-    html,body{width:100%;height:100%;overflow:hidden;font-family:Arial,sans-serif;background:#000;color:white}
+    html,body{width:100%;height:100%;overflow:hidden;font-family:'Noto Sans Devanagari',Arial,sans-serif;background:#000;color:white}
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;700&display=swap');
     #bg{position:fixed;top:0;left:0;z-index:-1}
     #app{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;height:100vh;padding-top:40px}
     .title{font-size:2rem;margin-bottom:20px;color:#fff;text-shadow:0 0 10px #0ff}
     .buttons button{margin:10px;padding:12px 20px;font-size:1.2rem;border:none;border-radius:12px;background:#00bcd4;color:#fff;cursor:pointer;transition:transform .3s}
     .buttons button:hover{transform:scale(1.1);background:#0097a7}
     .voice-choice{margin:20px;font-size:1rem}
-    #letter-container{display:flex;align-items:center;justify-content:center;flex:1;font-size:20vw;text-shadow:0 0 20px #fff;cursor:pointer;user-select:none}
+    #letter-container{display:flex;align-items:center;justify-content:center;flex:1;font-size:28vw; /* Bigger size */ text-shadow:0 0 25px #fff;cursor:pointer;user-select:none}
     footer{position:fixed;bottom:10px;text-align:center;width:100%;font-size:.9rem;color:#aaa}
   </style>
 </head>
@@ -35,8 +36,8 @@
   <footer>Developed by Aayush Singh</footer>
 
   <script>
-    // Offline service worker
-    if('serviceWorker'in navigator){
+    // Offline Service Worker
+    if('serviceWorker' in navigator){
       const swBlob=new Blob([`
         const CACHE='magic-cache-v1';
         const FILES=['./'];
@@ -51,7 +52,7 @@
       navigator.serviceWorker.register(swURL);
     }
 
-    // Bubbles background
+    // Bubbles Background
     const canvas=document.getElementById('bg'),ctx=canvas.getContext('2d');
     let bubbles=[];
     function resizeCanvas(){canvas.width=innerWidth;canvas.height=innerHeight;}
@@ -72,16 +73,16 @@
     }
     drawBubbles();
 
-    // Data sets
+    // Data Sets
     const letters='ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
     const numbers=Array.from({length:100},(_,i)=>(i+1).toString());
-    const hindi='कखगघङचछजझञटठडढणतथदधनपफबभमयरलवशषसहक्षत्रज्ञ'.split('');
+    // Fixed Hindi array for Devanagari letters:
+    const hindi=['क','ख','ग','घ','ङ','च','छ','ज','झ','ञ','ट','ठ','ड','ढ','ण','त','थ','द','ध','न','प','फ','ब','भ','म','य','र','ल','व','श','ष','स','ह','क्ष','त्र','ज्ञ'];
+
     let currentList=[],index=0;
 
     function startLearning(type){
-      if(type==='abc')currentList=letters;
-      else if(type==='numbers')currentList=numbers;
-      else currentList=hindi;
+      currentList=(type==='abc')?letters:(type==='numbers')?numbers:hindi;
       index=0;showLetter();
     }
     function showLetter(){
@@ -96,6 +97,8 @@
     function speakLetter(letter){
       const voiceType=document.querySelector('input[name="voice"]:checked').value;
       const utter=new SpeechSynthesisUtterance(letter);
+      // For Hindi, set lang explicitly
+      if(/[क-ह]/.test(letter)) utter.lang='hi-IN';
       const voices=speechSynthesis.getVoices();
       utter.voice=voices.find(v=>voiceType==='male'?v.name.toLowerCase().includes('male')||v.name.includes('David'):v.name.toLowerCase().includes('female')||v.name.includes('Zira'))||voices[0];
       speechSynthesis.speak(utter);
@@ -110,16 +113,16 @@
       for(let i=0;i<30;i++){
         const div=document.createElement('div');
         div.style.position='fixed';div.style.left=x+'px';div.style.top=y+'px';
-        div.style.width='8px';div.style.height='8px';
+        div.style.width='10px';div.style.height='10px';
         div.style.background=getRandomColor();
         div.style.borderRadius='50%';div.style.pointerEvents='none';
         document.body.appendChild(div);
         const angle=Math.random()*2*Math.PI;
-        const distance=Math.random()*100+50;
+        const distance=Math.random()*120+60;
         const dx=Math.cos(angle)*distance;
         const dy=Math.sin(angle)*distance;
-        div.animate([{transform:'translate(0,0)',opacity:1},{transform:`translate(${dx}px,${dy}px)`,opacity:0}],{duration:600,easing:'ease-out'});
-        setTimeout(()=>div.remove(),600);
+        div.animate([{transform:'translate(0,0)',opacity:1},{transform:`translate(${dx}px,${dy}px)`,opacity:0}],{duration:700,easing:'ease-out'});
+        setTimeout(()=>div.remove(),700);
       }
     }
   </script>
