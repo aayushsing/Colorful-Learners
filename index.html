@@ -8,59 +8,37 @@
     *{margin:0;padding:0;box-sizing:border-box}
     html,body{width:100%;height:100%;overflow:hidden;font-family:'Noto Sans Devanagari',Arial,sans-serif;color:white}
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;700&display=swap');
-    /* Background video styling */
     #bg-video{
-      position:fixed;
-      top:0;left:0;
-      width:100%;height:100%;
-      object-fit:cover;
-      z-index:-2;
+      position:fixed;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:-2;
     }
-    #bg-canvas{
-      position:fixed;
-      top:0;left:0;
-      z-index:-1;
-    }
-    #app{
-      display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
-      height:100vh;padding-top:40px;text-align:center;
-    }
+    #bg-canvas{position:fixed;top:0;left:0;z-index:-1;}
+    #app{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;height:100vh;padding-top:40px;text-align:center;}
     .title{font-size:2rem;margin-bottom:10px;text-shadow:0 0 12px #0ff;}
-    .buttons button{margin:8px;padding:12px 20px;font-size:1.1rem;border:none;border-radius:12px;background:#00bcd4;color:#fff;cursor:pointer;transition:transform .3s}
-    .buttons button:hover{transform:scale(1.1) rotate(1deg);background:#0097a7}
+    .buttons button, #play-btn{
+      margin:8px;padding:12px 20px;font-size:1.1rem;border:none;border-radius:12px;background:#00bcd4;color:#fff;cursor:pointer;transition:transform .3s;
+    }
+    .buttons button:hover,#play-btn:hover{transform:scale(1.1) rotate(1deg);background:#0097a7;}
     .voice-choice,.number-lang{margin:10px;font-size:1rem;}
     .card{
       display:flex;align-items:center;justify-content:center;
       width:80vw;max-width:350px;height:50vh;max-height:300px;
-      background:rgba(255,255,255,0.1);
-      border-radius:20px;
-      backdrop-filter:blur(10px);
-      box-shadow:0 8px 20px rgba(0,0,0,0.5);
-      perspective:1000px;
-      transform-style:preserve-3d;
-      transition:transform .4s;
+      background:rgba(255,255,255,0.1);border-radius:20px;
+      backdrop-filter:blur(10px);box-shadow:0 8px 20px rgba(0,0,0,0.5);
+      perspective:1000px;transform-style:preserve-3d;transition:transform .4s;
+      margin-bottom:10px;
     }
     .card:active{transform:rotateY(8deg) rotateX(8deg) scale(0.98);}
-    #letter-container{
-      font-size:25vw;max-width:90%;
-      text-shadow:0 0 25px #fff;
-      cursor:pointer;user-select:none;
-    }
+    #letter-container{font-size:25vw;max-width:90%;text-shadow:0 0 25px #fff;cursor:pointer;user-select:none;}
     footer{position:fixed;bottom:8px;width:100%;font-size:.85rem;color:#ddd;text-shadow:0 0 3px #000;}
     @media (max-width:600px){
-      .title{font-size:1.5rem;}
-      #letter-container{font-size:35vw;}
-      .buttons button{font-size:1rem;padding:10px 14px;}
+      .title{font-size:1.5rem;}#letter-container{font-size:35vw;}
+      .buttons button,#play-btn{font-size:1rem;padding:10px 14px;}
     }
   </style>
 </head>
 <body>
-  <!-- Fullscreen looping background video -->
   <video id="bg-video" autoplay muted loop playsinline>
     <source src="VID_20250919_150128_178.mp4" type="video/mp4"/>
-    <!-- Optional webm for better compression -->
-    <!-- <source src="your-video.webm" type="video/webm"/> -->
-    Your browser does not support the video tag.
   </video>
   <canvas id="bg-canvas"></canvas>
   <div id="app">
@@ -83,15 +61,16 @@
     <div class="card">
       <div id="letter-container" onclick="blastLetter(event)"></div>
     </div>
+    <button id="play-btn" onclick="togglePlay()">▶ Play All</button>
   </div>
   <footer>Developed by Aayush Singh</footer>
 
   <script>
-    // Offline Service Worker
+    // Offline caching
     if('serviceWorker' in navigator){
       const swBlob=new Blob([`
-        const CACHE='magic-cache-v4';
-        con'];
+        const CACHE='magic-cache-v5';
+        const FILES=['./','VID_20250919_150128_178.mp4'];
         self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES))));
         self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))));
       `],{type:'text/javascript'});
@@ -99,7 +78,7 @@
       navigator.serviceWorker.register(swURL);
     }
 
-    // Bubbles over video
+    // Bubble background
     const canvas=document.getElementById('bg-canvas'),ctx=canvas.getContext('2d');
     let bubbles=[];
     function resizeCanvas(){canvas.width=innerWidth;canvas.height=innerHeight;}
@@ -123,38 +102,38 @@
     const letters='ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
     const numbers=Array.from({length:100},(_,i)=>(i+1).toString());
     const hindi=['क','ख','ग','घ','ङ','च','छ','ज','झ','ञ','ट','ठ','ड','ढ','ण','त','थ','द','ध','न','प','फ','ब','भ','म','य','र','ल','व','श','ष','स','ह','क्ष','त्र','ज्ञ'];
-    let currentList=[],index=0,currentType='';
+    let currentList=[],index=0,currentType='',playing=false,playInterval;
 
     function startLearning(type){
       currentType=type;
       currentList=(type==='abc')?letters:(type==='numbers')?numbers:hindi;
       document.getElementById('numberLangChoice').style.display=(type==='numbers')?'block':'none';
       index=0;showLetter();
+      stopPlay();
     }
-
     function showLetter(){
       const container=document.getElementById('letter-container');
       container.style.color=getRandomColor();
       container.textContent=currentList[index];
       speakLetter(currentList[index]);
     }
-    function nextLetter(){index=(index+1)%currentList.length;showLetter();}
+    function nextLetter(){
+      index=(index+1)%currentList.length;
+      showLetter();
+      if(index===0 && playing){stopPlay();}
+    }
     function getRandomColor(){return`hsl(${Math.random()*360},80%,60%)`;}
 
     function speakLetter(letter){
       const voiceType=document.querySelector('input[name="voice"]:checked').value;
       const numLang=document.querySelector('input[name="numLang"]:checked')?.value||'en';
       const utter=new SpeechSynthesisUtterance(letter);
-      if(currentType==='numbers'){
-        utter.lang=(numLang==='hi')?'hi-IN':'en-US';
-      }else if(/[क-ह]/.test(letter)){
-        utter.lang='hi-IN';
-      }else utter.lang='en-US';
-
+      if(currentType==='numbers'){ utter.lang=(numLang==='hi')?'hi-IN':'en-US'; }
+      else if(/[क-ह]/.test(letter)){ utter.lang='hi-IN'; }
+      else utter.lang='en-US';
       const voices=speechSynthesis.getVoices();
       utter.voice=voices.find(v=>voiceType==='male'?v.name.toLowerCase().includes('male')||v.name.includes('David'):v.name.toLowerCase().includes('female')||v.name.includes('Zira'))||voices[0];
-      speechSynthesis.cancel();
-      speechSynthesis.speak(utter);
+      speechSynthesis.cancel();speechSynthesis.speak(utter);
     }
 
     function blastLetter(e){
@@ -165,18 +144,31 @@
     function createBlast(x,y){
       for(let i=0;i<25;i++){
         const div=document.createElement('div');
-        div.style.position='fixed';
-        div.style.left=x+'px';div.style.top=y+'px';
+        div.style.position='fixed';div.style.left=x+'px';div.style.top=y+'px';
         div.style.width='10px';div.style.height='10px';
-        div.style.background=getRandomColor();
-        div.style.borderRadius='50%';div.style.pointerEvents='none';
+        div.style.background=getRandomColor();div.style.borderRadius='50%';div.style.pointerEvents='none';
         document.body.appendChild(div);
-        const angle=Math.random()*2*Math.PI;
-        const distance=Math.random()*100+50;
+        const angle=Math.random()*2*Math.PI,distance=Math.random()*100+50;
         const dx=Math.cos(angle)*distance,dy=Math.sin(angle)*distance;
         div.animate([{transform:'translate(0,0)',opacity:1},{transform:`translate(${dx}px,${dy}px)`,opacity:0}],{duration:700,easing:'ease-out'});
         setTimeout(()=>div.remove(),700);
       }
+    }
+
+    // Play all functionality
+    function togglePlay(){
+      if(playing){stopPlay();return;}
+      if(!currentList.length)return;
+      playing=true;
+      document.getElementById('play-btn').textContent='⏸ Stop';
+      playInterval=setInterval(()=>{
+        nextLetter();
+      },1500);
+    }
+    function stopPlay(){
+      playing=false;
+      clearInterval(playInterval);
+      document.getElementById('play-btn').textContent='▶ Play All';
     }
   </script>
 </body>
