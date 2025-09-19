@@ -10,12 +10,31 @@
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;700&display=swap');
     #bg{position:fixed;top:0;left:0;z-index:-1}
     #app{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;height:100vh;padding-top:40px}
-    .title{font-size:2rem;margin-bottom:20px;color:#fff;text-shadow:0 0 10px #0ff}
-    .buttons button{margin:10px;padding:12px 20px;font-size:1.2rem;border:none;border-radius:12px;background:#00bcd4;color:#fff;cursor:pointer;transition:transform .3s}
-    .buttons button:hover{transform:scale(1.1);background:#0097a7}
-    .voice-choice{margin:20px;font-size:1rem}
-    #letter-container{display:flex;align-items:center;justify-content:center;flex:1;font-size:28vw; /* Bigger size */ text-shadow:0 0 25px #fff;cursor:pointer;user-select:none}
-    footer{position:fixed;bottom:10px;text-align:center;width:100%;font-size:.9rem;color:#aaa}
+    .title{font-size:2rem;margin-bottom:10px;color:#fff;text-shadow:0 0 12px #0ff;text-align:center}
+    .buttons button{margin:8px;padding:12px 20px;font-size:1.1rem;border:none;border-radius:12px;background:#00bcd4;color:#fff;cursor:pointer;transition:transform .3s}
+    .buttons button:hover{transform:scale(1.1) rotate(1deg);background:#0097a7}
+    .voice-choice,.number-lang{margin:10px;font-size:1rem;text-align:center}
+    .card{
+      display:flex;align-items:center;justify-content:center;
+      width:80vw;max-width:350px;height:50vh;max-height:300px;
+      background:rgba(255,255,255,0.1);
+      border-radius:20px;
+      backdrop-filter:blur(10px);
+      box-shadow:0 8px 20px rgba(0,0,0,0.5);
+      perspective:1000px;
+      transform-style:preserve-3d;
+      transition:transform .4s;
+    }
+    .card:active{transform:rotateY(8deg) rotateX(8deg) scale(0.98);}
+    #letter-container{
+      font-size:25vw;max-width:90%;text-align:center;text-shadow:0 0 25px #fff;cursor:pointer;user-select:none;
+    }
+    footer{position:fixed;bottom:8px;text-align:center;width:100%;font-size:.85rem;color:#aaa}
+    @media (max-width:600px){
+      .title{font-size:1.5rem;}
+      #letter-container{font-size:35vw;}
+      .buttons button{font-size:1rem;padding:10px 14px;}
+    }
   </style>
 </head>
 <body>
@@ -23,42 +42,46 @@
   <div id="app">
     <h1 class="title">Magic Letters & Numbers</h1>
     <div class="buttons">
-      <button onclick="startLearning('abc')">A-Z</button>
-      <button onclick="startLearning('numbers')">1-100</button>
-      <button onclick="startLearning('hindi')">क-ज्ञ</button>
+      <button onclick="startLearning('abc')">A–Z</button>
+      <button onclick="startLearning('numbers')">1–100</button>
+      <button onclick="startLearning('hindi')">क–ज्ञ</button>
     </div>
     <div class="voice-choice">
-      <label><input type="radio" name="voice" value="male" checked> Boy Voice</label>
-      <label><input type="radio" name="voice" value="female"> Girl Voice</label>
+      <strong>Voice:</strong>
+      <label><input type="radio" name="voice" value="male" checked> Boy</label>
+      <label><input type="radio" name="voice" value="female"> Girl</label>
     </div>
-    <div id="letter-container" onclick="blastLetter(event)"></div>
+    <div class="number-lang" id="numberLangChoice" style="display:none;">
+      <strong>Number Voice Language:</strong>
+      <label><input type="radio" name="numLang" value="en" checked> English</label>
+      <label><input type="radio" name="numLang" value="hi"> Hindi</label>
+    </div>
+    <div class="card">
+      <div id="letter-container" onclick="blastLetter(event)"></div>
+    </div>
   </div>
   <footer>Developed by Aayush Singh</footer>
 
   <script>
-    // Offline Service Worker
+    // Offline service worker
     if('serviceWorker' in navigator){
       const swBlob=new Blob([`
-        const CACHE='magic-cache-v1';
+        const CACHE='magic-cache-v3';
         const FILES=['./'];
-        self.addEventListener('install',e=>{
-          e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES)))
-        });
-        self.addEventListener('fetch',e=>{
-          e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)))
-        });
+        self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES))));
+        self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))));
       `],{type:'text/javascript'});
       const swURL=URL.createObjectURL(swBlob);
       navigator.serviceWorker.register(swURL);
     }
 
-    // Bubbles Background
+    // Bubbles
     const canvas=document.getElementById('bg'),ctx=canvas.getContext('2d');
     let bubbles=[];
     function resizeCanvas(){canvas.width=innerWidth;canvas.height=innerHeight;}
     addEventListener('resize',resizeCanvas);resizeCanvas();
-    for(let i=0;i<50;i++){
-      bubbles.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*5+2,dx:(Math.random()-.5)*.5,dy:(Math.random()-.5)*.5});
+    for(let i=0;i<60;i++){
+      bubbles.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*5+2,dx:(Math.random()-.5)*.6,dy:(Math.random()-.5)*.6});
     }
     function drawBubbles(){
       ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -73,18 +96,18 @@
     }
     drawBubbles();
 
-    // Data Sets
     const letters='ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
     const numbers=Array.from({length:100},(_,i)=>(i+1).toString());
-    // Fixed Hindi array for Devanagari letters:
     const hindi=['क','ख','ग','घ','ङ','च','छ','ज','झ','ञ','ट','ठ','ड','ढ','ण','त','थ','द','ध','न','प','फ','ब','भ','म','य','र','ल','व','श','ष','स','ह','क्ष','त्र','ज्ञ'];
-
-    let currentList=[],index=0;
+    let currentList=[],index=0,currentType='';
 
     function startLearning(type){
+      currentType=type;
       currentList=(type==='abc')?letters:(type==='numbers')?numbers:hindi;
+      document.getElementById('numberLangChoice').style.display=(type==='numbers')?'block':'none';
       index=0;showLetter();
     }
+
     function showLetter(){
       const container=document.getElementById('letter-container');
       container.style.color=getRandomColor();
@@ -96,11 +119,20 @@
 
     function speakLetter(letter){
       const voiceType=document.querySelector('input[name="voice"]:checked').value;
+      const numLang=document.querySelector('input[name="numLang"]:checked')?.value||'en';
       const utter=new SpeechSynthesisUtterance(letter);
-      // For Hindi, set lang explicitly
-      if(/[क-ह]/.test(letter)) utter.lang='hi-IN';
+
+      if(currentType==='numbers'){
+        utter.lang=(numLang==='hi')?'hi-IN':'en-US';
+      }else if(/[क-ह]/.test(letter)){
+        utter.lang='hi-IN';
+      }else{
+        utter.lang='en-US';
+      }
+
       const voices=speechSynthesis.getVoices();
       utter.voice=voices.find(v=>voiceType==='male'?v.name.toLowerCase().includes('male')||v.name.includes('David'):v.name.toLowerCase().includes('female')||v.name.includes('Zira'))||voices[0];
+      speechSynthesis.cancel();
       speechSynthesis.speak(utter);
     }
 
@@ -110,15 +142,19 @@
       setTimeout(nextLetter,300);
     }
     function createBlast(x,y){
-      for(let i=0;i<30;i++){
+      for(let i=0;i<25;i++){
         const div=document.createElement('div');
-        div.style.position='fixed';div.style.left=x+'px';div.style.top=y+'px';
-        div.style.width='10px';div.style.height='10px';
+        div.style.position='fixed';
+        div.style.left=x+'px';
+        div.style.top=y+'px';
+        div.style.width='10px';
+        div.style.height='10px';
         div.style.background=getRandomColor();
-        div.style.borderRadius='50%';div.style.pointerEvents='none';
+        div.style.borderRadius='50%';
+        div.style.pointerEvents='none';
         document.body.appendChild(div);
         const angle=Math.random()*2*Math.PI;
-        const distance=Math.random()*120+60;
+        const distance=Math.random()*100+50;
         const dx=Math.cos(angle)*distance;
         const dy=Math.sin(angle)*distance;
         div.animate([{transform:'translate(0,0)',opacity:1},{transform:`translate(${dx}px,${dy}px)`,opacity:0}],{duration:700,easing:'ease-out'});
