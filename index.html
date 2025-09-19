@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Fun 3D Learning</title>
+  <style>
+    body {
+      margin:0;
+      font-family: Comic Sans MS, sans-serif;
+      background: linear-gradient(45deg,#ffecd2,#fcb69f);
+      display:flex;justify-content:center;align-items:center;
+      height:100vh;overflow:hidden;text-align:center;
+    }
+    .overlay {
+      display:flex;flex-direction:column;align-items:center;
+      gap:20px;
+    }
+    .overlay h2 {font-size:2em;color:#444;}
+    button {
+      background:#6c63ff;color:#fff;border:none;border-radius:20px;
+      padding:15px 30px;font-size:1.2em;cursor:pointer;
+      transition:transform 0.3s, background 0.3s;
+    }
+    button:hover {transform:scale(1.1) rotateY(10deg);background:#5548d9;}
+    #content.hidden {display:none;}
+    #display {
+      font-size:14vw;font-weight:bold;color:#fff;
+      text-shadow:3px 3px 10px rgba(0,0,0,0.5);
+      transition:transform 0.8s,color 0.8s;user-select:none;
+    }
+    #display:hover {transform:rotateY(20deg) rotateX(10deg) scale(1.2);}
+    .controls {
+      position:absolute;bottom:30px;display:flex;gap:40px;
+    }
+    .controls button {
+      background:#ff6b6b;border-radius:50%;width:70px;height:70px;
+      font-size:2em;box-shadow:0 5px 15px rgba(0,0,0,0.3);
+    }
+    .controls button:hover {background:#ff3b3b;}
+  </style>
+</head>
+<body>
+  <div class="overlay" id="overlay">
+    <h2>🎉 Choose Learner 🎉</h2>
+    <button onclick="setGender('boy')">👦 Boy</button>
+    <button onclick="setGender('girl')">👧 Girl</button>
+  </div>
+
+  <div id="content" class="hidden">
+    <div id="display"></div>
+    <div class="controls">
+      <button onclick="prevItem()">◀</button>
+      <button onclick="nextItem()">▶</button>
+    </div>
+  </div>
+
+  <script>
+    let gender = "boy";
+    const english = Array.from({length:26},(_,i)=>String.fromCharCode(65+i));
+    const numbers = Array.from({length:100},(_,i)=>`${i+1}`);
+    const hindi = ["क","ख","ग","घ","ङ","च","छ","ज","झ","ञ","ट","ठ","ड","ढ","ण","त","थ","द","ध","न",
+      "प","फ","ब","भ","म","य","र","ल","व","श","ष","स","ह","क्ष","त्र","ज्ञ"];
+    const letters = [...english,...numbers,...hindi];
+    let currentIndex=0;
+    const display=document.getElementById("display");
+    const overlay=document.getElementById("overlay");
+    const content=document.getElementById("content");
+
+    function randomColor(){
+      const hue=Math.floor(Math.random()*360);
+      return `hsl(${hue},80%,60%)`;
+    }
+    function setGender(g){
+      gender=g;
+      overlay.style.display="none";
+      content.classList.remove("hidden");
+      showItem();
+    }
+    function showItem(){
+      const item=letters[currentIndex];
+      display.textContent=item;
+      display.style.color=randomColor();
+      speak(item);
+    }
+    function nextItem(){
+      currentIndex=(currentIndex+1)%letters.length;
+      showItem();
+    }
+    function prevItem(){
+      currentIndex=(currentIndex-1+letters.length)%letters.length;
+      showItem();
+    }
+    function speak(text){
+      if(!window.speechSynthesis)return;
+      const utter=new SpeechSynthesisUtterance(text);
+      const voices=speechSynthesis.getVoices();
+      if(gender==="boy"){
+        utter.voice=voices.find(v=>v.name.toLowerCase().includes("male"))||voices[0];
+      }else{
+        utter.voice=voices.find(v=>v.name.toLowerCase().includes("female"))||voices[1]||voices[0];
+      }
+      speechSynthesis.cancel();
+      speechSynthesis.speak(utter);
+    }
+    speechSynthesis.onvoiceschanged=()=>speak("");
+  </script>
+</body>
+</html>
