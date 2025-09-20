@@ -8,40 +8,26 @@
     *{margin:0;padding:0;box-sizing:border-box}
     html,body{width:100%;height:100%;overflow:hidden;font-family:'Noto Sans Devanagari',Arial,sans-serif;color:white}
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;700&display=swap');
-    #bg-video{
-      position:fixed;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:-2;
-    }
-    #bg-canvas{position:fixed;top:0;left:0;z-index:-1;}
+    #bg-video{position:fixed;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:-3;}
+    #bg-canvas{position:fixed;top:0;left:0;z-index:-2;}
     #app{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;height:100vh;padding-top:40px;text-align:center;}
     .title{font-size:2rem;margin-bottom:10px;text-shadow:0 0 12px #0ff;}
-    .buttons button, #play-btn{
-      margin:8px;padding:12px 20px;font-size:1.1rem;border:none;border-radius:12px;background:#00bcd4;color:#fff;cursor:pointer;transition:transform .3s;
-    }
+    .buttons button,#play-btn{margin:8px;padding:12px 20px;font-size:1.1rem;border:none;border-radius:12px;background:#00bcd4;color:#fff;cursor:pointer;transition:transform .3s;}
     .buttons button:hover,#play-btn:hover{transform:scale(1.1) rotate(1deg);background:#0097a7;}
     .voice-choice,.number-lang{margin:10px;font-size:1rem;}
-    .card{
-      display:flex;align-items:center;justify-content:center;
-      width:80vw;max-width:350px;height:50vh;max-height:300px;
-      background:rgba(255,255,255,0.1);border-radius:20px;
-      backdrop-filter:blur(10px);box-shadow:0 8px 20px rgba(0,0,0,0.5);
-      perspective:1000px;transform-style:preserve-3d;transition:transform .4s;
-      margin-bottom:10px;
-    }
+    .card{display:flex;flex-direction:column;align-items:center;justify-content:center;width:80vw;max-width:350px;height:50vh;max-height:300px;background:rgba(255,255,255,0.1);border-radius:20px;backdrop-filter:blur(10px);box-shadow:0 8px 20px rgba(0,0,0,0.5);perspective:1000px;transform-style:preserve-3d;transition:transform .4s;margin-bottom:10px;position:relative;}
     .card:active{transform:rotateY(8deg) rotateX(8deg) scale(0.98);}
-    #letter-container{font-size:25vw;max-width:90%;text-shadow:0 0 25px #fff;cursor:pointer;user-select:none;}
+    #animal-bg{position:absolute;top:0;left:0;width:100%;height:100%;opacity:0.2;object-fit:cover;border-radius:20px;z-index:0;}
+    #letter-container{font-size:25vw;max-width:90%;text-shadow:0 0 25px #fff;cursor:pointer;user-select:none;z-index:1;}
+    #animal-name{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-size:1.2rem;color:rgba(255,255,255,0.7);text-shadow:0 0 5px #000;z-index:1;}
     footer{position:fixed;bottom:8px;width:100%;font-size:.85rem;color:#ddd;text-shadow:0 0 3px #000;display:flex;align-items:center;justify-content:center;gap:6px;}
     footer img{width:30px;height:30px;border-radius:50%;object-fit:cover;border:2px solid #fff;}
-    @media (max-width:600px){
-      .title{font-size:1.5rem;}#letter-container{font-size:35vw;}
-      .buttons button,#play-btn{font-size:1rem;padding:10px 14px;}
-      footer img{width:24px;height:24px;}
-    }
-    .phrase{
-      position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
-      font-size:2rem;font-weight:bold;text-shadow:0 0 12px #000;opacity:0;
-      transition:opacity .5s,transform .5s;
-      z-index:99;
-    }
+    @media(max-width:600px){.title{font-size:1.5rem;}#letter-container{font-size:35vw;}.buttons button,#play-btn{font-size:1rem;padding:10px 14px;}footer img{width:24px;height:24px;}}
+    .phrase{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:2rem;font-weight:bold;text-shadow:0 0 12px #000;opacity:0;transition:opacity .5s,transform .5s;z-index:99;}
+    /* Floating help window */
+    #help-popup{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:200;}
+    #help-content{background:white;color:black;padding:20px;border-radius:12px;max-width:320px;text-align:center;}
+    #close-help{margin-top:10px;padding:8px 16px;border:none;border-radius:8px;background:#00bcd4;color:white;cursor:pointer;}
   </style>
 </head>
 <body>
@@ -49,6 +35,15 @@
     <source src="VID_20250919_150128_178.mp4" type="video/mp4"/>
   </video>
   <canvas id="bg-canvas"></canvas>
+
+  <div id="help-popup" style="display:none;">
+    <div id="help-content">
+      <h3>How to Use</h3>
+      <p>Choose A–Z, Numbers, or Hindi. Tap the card to go next, or press ▶ Play All to autoplay. For numbers like 10, 20, etc., enjoy special praise and effects!</p>
+      <button id="close-help">Got it!</button>
+    </div>
+  </div>
+
   <div id="app">
     <h1 class="title">Magic Letters & Numbers</h1>
     <div class="buttons">
@@ -67,40 +62,28 @@
       <label><input type="radio" name="numLang" value="hi"> Hindi</label>
     </div>
     <div class="card">
+      <img id="animal-bg" src="" alt="">
       <div id="letter-container" onclick="blastLetter(event)"></div>
+      <div id="animal-name"></div>
     </div>
     <button id="play-btn" onclick="togglePlay()">▶ Play All</button>
   </div>
-  <div id="help-window">
-  <div class="help-content">
-    <h2>Welcome to Magic Letters & Numbers!</h2>
-    <ul>
-      <li>🎨 Tap the big letter/number to move to the next one with effects.</li>
-      <li>▶ Use "Play All" to autoplay through all letters or numbers.</li>
-      <li>🔊 Choose a voice (Boy/Girl) and number language (English/Hindi).</li>
-      <li>🎉 Special effects & compliments on milestones (10, 20, 50, etc.).</li>
-    </ul>
-    <button id="close-help">Got it!</button>
-  </div>
-  </div>
-
   <footer>
     <span>Developed by Aayush Singh</span>
     <img src="Aayush photo.jpg" alt="Developer"/>
   </footer>
 
   <script>
-    // Service Worker
-    if('serviceWorker' in navigator){
-      const swBlob=new Blob([`
-        const CACHE='magic-cache-v6';
-        const FILES=['./','VID_20250919_150128_178.mp4'];
-        self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES))));
-        self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))));
-      `],{type:'text/javascript'});
-      const swURL=URL.createObjectURL(swBlob);
-      navigator.serviceWorker.register(swURL);
-    }
+    // Floating window logic
+    window.addEventListener('load',()=>{
+      if(!localStorage.getItem('seenHelp')){
+        document.getElementById('help-popup').style.display='flex';
+      }
+    });
+    document.getElementById('close-help').onclick=function(){
+      document.getElementById('help-popup').style.display='none';
+      localStorage.setItem('seenHelp','true');
+    };
 
     // Bubbles
     const canvas=document.getElementById('bg-canvas'),ctx=canvas.getContext('2d');
@@ -111,176 +94,90 @@
     function drawBubbles(){
       ctx.clearRect(0,0,canvas.width,canvas.height);
       ctx.fillStyle='rgba(255,255,255,.3)';
-      bubbles.forEach(b=>{
-        ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,Math.PI*2);ctx.fill();
-        b.x+=b.dx;b.y+=b.dy;
-        if(b.x<0||b.x>canvas.width)b.dx*=-1;
-        if(b.y<0||b.y>canvas.height)b.dy*=-1;
-      });
+      bubbles.forEach(b=>{ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,Math.PI*2);ctx.fill();b.x+=b.dx;b.y+=b.dy;if(b.x<0||b.x>canvas.width)b.dx*=-1;if(b.y<0||b.y>canvas.height)b.dy*=-1;});
       requestAnimationFrame(drawBubbles);
     }
     drawBubbles();
+
+    const animals={
+      A:{name:"Alligator",img:"https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.nationalgeographic.com%2Fanimals%2Freptiles%2Ffacts%2Famerican-alligator&psig=AOvVaw1jUPCCe2JTcti3mLq-4YFh&ust=1758477986488000&source=images&cd=vfe&opi=89978449&ved=0CBUQjRxqFwoTCOiR3Zb3548DFQAAAAAdAAAAABAE"},
+      B:{name:"Bear",img:"https://www.google.com/imgres?q=Bear%0D%0A&imgurl=https%3A%2F%2Fupload.wikimedia.org%2Fwikipedia%2Fcommons%2F9%2F9e%2FOurs_brun_parcanimalierpyrenees_1.jpg&imgrefurl=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FBear&docid=_44HmSV8bjuyUM&tbnid=YgF2b3pSILBPjM&vet=12ahUKEwjPgcqr9-ePAxV91DgGHU6XMw8QM3oECBUQAA..i&w=800&h=600&hcb=2&ved=2ahUKEwjPgcqr9-ePAxV91DgGHU6XMw8QM3oECBUQAA"},
+      C:{name:"Cat",img:"https://source.unsplash.com/400x400/?cat"},
+      D:{name:"Dog",img:"https://source.unsplash.com/400x400/?dog"},
+      E:{name:"Elephant",img:"https://source.unsplash.com/400x400/?elephant"},
+      F:{name:"Fox",img:"https://source.unsplash.com/400x400/?fox"},
+      G:{name:"Giraffe",img:"https://source.unsplash.com/400x400/?giraffe"},
+      H:{name:"Horse",img:"https://source.unsplash.com/400x400/?horse"},
+      I:{name:"Iguana",img:"https://source.unsplash.com/400x400/?iguana"},
+      J:{name:"Jaguar",img:"https://source.unsplash.com/400x400/?jaguar"},
+      K:{name:"Kangaroo",img:"https://source.unsplash.com/400x400/?kangaroo"},
+      L:{name:"Lion",img:"https://source.unsplash.com/400x400/?lion"},
+      M:{name:"Monkey",img:"https://source.unsplash.com/400x400/?monkey"},
+      N:{name:"Newt",img:"https://source.unsplash.com/400x400/?newt"},
+      O:{name:"Owl",img:"https://source.unsplash.com/400x400/?owl"},
+      P:{name:"Panda",img:"https://source.unsplash.com/400x400/?panda"},
+      Q:{name:"Quail",img:"https://source.unsplash.com/400x400/?quail"},
+      R:{name:"Rabbit",img:"https://source.unsplash.com/400x400/?rabbit"},
+      S:{name:"Snake",img:"https://source.unsplash.com/400x400/?snake"},
+      T:{name:"Tiger",img:"https://source.unsplash.com/400x400/?tiger"},
+      U:{name:"Urial",img:"https://source.unsplash.com/400x400/?urial"},
+      V:{name:"Vulture",img:"https://source.unsplash.com/400x400/?vulture"},
+      W:{name:"Wolf",img:"https://source.unsplash.com/400x400/?wolf"},
+      X:{name:"Xerus",img:"https://source.unsplash.com/400x400/?xerus"},
+      Y:{name:"Yak",img:"https://source.unsplash.com/400x400/?yak"},
+      Z:{name:"Zebra",img:"https://source.unsplash.com/400x400/?zebra"}
+    };
 
     const letters='ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
     const numbers=Array.from({length:100},(_,i)=>(i+1).toString());
     const hindi=['क','ख','ग','घ','ङ','च','छ','ज','झ','ञ','ट','ठ','ड','ढ','ण','त','थ','द','ध','न','प','फ','ब','भ','म','य','र','ल','व','श','ष','स','ह','क्ष','त्र','ज्ञ'];
     let currentList=[],index=0,currentType='',playing=false,playInterval;
-
     const phrases=["Well done!","Keep it up!","Whooow!","Great job!","Fantastic!","Awesome!","You're amazing!","Brilliant!","Superb!","Excellent!"];
 
     function startLearning(type){
       currentType=type;
       currentList=(type==='abc')?letters:(type==='numbers')?numbers:hindi;
       document.getElementById('numberLangChoice').style.display=(type==='numbers')?'block':'none';
-      index=0;showLetter();
-      stopPlay();
+      index=0;showLetter();stopPlay();
     }
     function showLetter(){
       const container=document.getElementById('letter-container');
+      const animalImg=document.getElementById('animal-bg');
+      const animalName=document.getElementById('animal-name');
       container.style.color=getRandomColor();
-      container.textContent=currentList[index];
-      speakLetter(currentList[index]);
-
-      // Special praise for multiples of 10 in numbers
-      if(currentType==='numbers' && parseInt(currentList[index])%10===0){
-        showPhrase();
-        createBlast(innerWidth/2,innerHeight/2);
-      }
+      const current=currentList[index];
+      container.textContent=current;
+      speakLetter(current);
+      if(currentType==='abc'){
+        const info=animals[current];
+        animalImg.src=info?.img||'';
+        animalName.textContent=info?.name||'';
+      }else{animalImg.src='';animalName.textContent='';}
+      if(currentType==='numbers'&&parseInt(current)%10===0){showPhrase();createBlast(innerWidth/2,innerHeight/2);}
     }
-    function nextLetter(){
-      index=(index+1)%currentList.length;
-      showLetter();
-      if(index===0 && playing){stopPlay();}
-    }
+    function nextLetter(){index=(index+1)%currentList.length;showLetter();if(index===0&&playing){stopPlay();}}
     function getRandomColor(){return`hsl(${Math.random()*360},80%,60%)`;}
-
     function speakLetter(letter){
       const voiceType=document.querySelector('input[name="voice"]:checked').value;
       const numLang=document.querySelector('input[name="numLang"]:checked')?.value||'en';
       const utter=new SpeechSynthesisUtterance(letter);
-      if(currentType==='numbers'){ utter.lang=(numLang==='hi')?'hi-IN':'en-US'; }
-      else if(/[क-ह]/.test(letter)){ utter.lang='hi-IN'; }
+      if(currentType==='numbers'){utter.lang=(numLang==='hi')?'hi-IN':'en-US';}
+      else if(/[क-ह]/.test(letter)){utter.lang='hi-IN';}
       else utter.lang='en-US';
       const voices=speechSynthesis.getVoices();
       utter.voice=voices.find(v=>voiceType==='male'?v.name.toLowerCase().includes('male')||v.name.includes('David'):v.name.toLowerCase().includes('female')||v.name.includes('Zira'))||voices[0];
       speechSynthesis.cancel();speechSynthesis.speak(utter);
-
-      if(currentType==='numbers' && parseInt(letter)%10===0){
+      if(currentType==='numbers'&&parseInt(letter)%10===0){
         const praise=phrases[Math.floor(Math.random()*phrases.length)];
         const praiseUtter=new SpeechSynthesisUtterance(praise);
         speechSynthesis.speak(praiseUtter);
       }
     }
-
-    function blastLetter(e){
-      if(!currentList.length)return;
-      createBlast(e.clientX,e.clientY);
-      setTimeout(nextLetter,300);
-    }
-    function createBlast(x,y){
-      for(let i=0;i<25;i++){
-        const div=document.createElement('div');
-        div.style.position='fixed';div.style.left=x+'px';div.style.top=y+'px';
-        div.style.width='10px';div.style.height='10px';
-        div.style.background=getRandomColor();div.style.borderRadius='50%';div.style.pointerEvents='none';
-        document.body.appendChild(div);
-        const angle=Math.random()*2*Math.PI,distance=Math.random()*100+50;
-        const dx=Math.cos(angle)*distance,dy=Math.sin(angle)*distance;
-        div.animate([{transform:'translate(0,0)',opacity:1},{transform:`translate(${dx}px,${dy}px)`,opacity:0}],{duration:700,easing:'ease-out'});
-        setTimeout(()=>div.remove(),700);
-      }
-    }
-
-    function showPhrase(){
-      const phrase=document.createElement('div');
-      phrase.className='phrase';
-      phrase.textContent=phrases[Math.floor(Math.random()*phrases.length)];
-      document.body.appendChild(phrase);
-      setTimeout(()=>{phrase.style.opacity=1;phrase.style.transform='translate(-50%,-50%) scale(1.2)';},50);
-      setTimeout(()=>{phrase.style.opacity=0;},1500);
-      setTimeout(()=>{phrase.remove();},2000);
-    }
-
-    function togglePlay(){
-      if(playing){stopPlay();return;}
-      if(!currentList.length)return;
-      playing=true;
-      document.getElementById('play-btn').textContent='⏸ Stop';
-      playInterval=setInterval(()=>{nextLetter();},1500);
-    }
-    function stopPlay(){
-      playing=false;
-      clearInterval(playInterval);
-      document.getElementById('play-btn').textContent='▶ Play All';
-    }
+    function blastLetter(e){if(!currentList.length)return;createBlast(e.clientX,e.clientY);setTimeout(nextLetter,300);}
+    function createBlast(x,y){for(let i=0;i<25;i++){const div=document.createElement('div');div.style.position='fixed';div.style.left=x+'px';div.style.top=y+'px';div.style.width='10px';div.style.height='10px';div.style.background=getRandomColor();div.style.borderRadius='50%';div.style.pointerEvents='none';document.body.appendChild(div);const angle=Math.random()*2*Math.PI,distance=Math.random()*100+50;const dx=Math.cos(angle)*distance,dy=Math.sin(angle)*distance;div.animate([{transform:'translate(0,0)',opacity:1},{transform:`translate(${dx}px,${dy}px)`,opacity:0}],{duration:700,easing:'ease-out'});setTimeout(()=>div.remove(),700);}}
+    function showPhrase(){const phrase=document.createElement('div');phrase.className='phrase';phrase.textContent=phrases[Math.floor(Math.random()*phrases.length)];document.body.appendChild(phrase);setTimeout(()=>{phrase.style.opacity=1;phrase.style.transform='translate(-50%,-50%) scale(1.2)';},50);setTimeout(()=>{phrase.style.opacity=0;},1500);setTimeout(()=>{phrase.remove();},2000);}
+    function togglePlay(){if(playing){stopPlay();return;}if(!currentList.length)return;playing=true;document.getElementById('play-btn').textContent='⏸ Stop';playInterval=setInterval(()=>{nextLetter();},1500);}
+    function stopPlay(){playing=false;clearInterval(playInterval);document.getElementById('play-btn').textContent='▶ Play All';}
   </script>
-<!-- ✅ Add this block at the very end of your HTML, just before </body> -->
-<!-- Floating Help Window -->
-<div id="help-window">
-  <div class="help-content">
-    <h2>Welcome to Magic Letters & Numbers!</h2>
-    <ul>
-      <li>🎨 Tap the big letter/number to see effects and move forward.</li>
-      <li>▶ Use "Play All" to autoplay through all letters or numbers.</li>
-      <li>🔊 Choose a voice (Boy/Girl) and number language (English/Hindi).</li>
-      <li>🎉 Enjoy special compliments and color blasts at milestones!</li>
-    </ul>
-    <button id="close-help">Got it!</button>
-  </div>
-</div>
-
-<style>
-#help-window {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0,0,0,0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-}
-.help-content {
-  background: #fff;
-  color: #000;
-  padding: 20px;
-  border-radius: 15px;
-  max-width: 90%;
-  width: 400px;
-  text-align: left;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-  animation: pop-in .4s ease;
-}
-.help-content h2 {margin-bottom:10px;color:#00bcd4;}
-.help-content ul {padding-left:20px;margin-bottom:15px;}
-#close-help {
-  background:#00bcd4;color:white;border:none;
-  padding:10px 20px;border-radius:8px;cursor:pointer;
-}
-#close-help:hover {background:#0097a7;}
-@keyframes pop-in {
-  0% {transform:scale(0.7);opacity:0;}
-  100% {transform:scale(1);opacity:1;}
-}
-</style>
-
-<script>
-// Show floating window only once per device
-document.addEventListener('DOMContentLoaded', () => {
-  const shown = localStorage.getItem('helpShown');
-  const helpWindow = document.getElementById('help-window');
-  const closeBtn = document.getElementById('close-help');
-  if (!shown) {
-    helpWindow.style.display = 'flex';
-  } else {
-    helpWindow.style.display = 'none';
-  }
-  closeBtn.addEventListener('click', () => {
-    helpWindow.style.display = 'none';
-    localStorage.setItem('helpShown', 'true');
-  });
-});
-</script>
-<!-- ✅ End Floating Help Window -->
 </body>
 </html>
