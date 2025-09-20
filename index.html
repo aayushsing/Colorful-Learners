@@ -5,14 +5,16 @@
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Magic Letters & Numbers</title>
   <style>
-    *{margin:0;padding:0;box-sizing:border-box;}
-    html,body{width:100%;height:100%;overflow:hidden;font-family:'Noto Sans Devanagari',Arial,sans-serif;color:white;}
+    *{margin:0;padding:0;box-sizing:border-box}
+    html,body{width:100%;height:100%;overflow:hidden;font-family:'Noto Sans Devanagari',Arial,sans-serif;color:white}
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;700&display=swap');
-    #bg-video{position:fixed;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:-2;}
+    #bg-video{
+      position:fixed;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:-2;
+    }
     #bg-canvas{position:fixed;top:0;left:0;z-index:-1;}
     #app{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;height:100vh;padding-top:40px;text-align:center;}
     .title{font-size:2rem;margin-bottom:10px;text-shadow:0 0 12px #0ff;}
-    .buttons button,#play-btn{
+    .buttons button, #play-btn{
       margin:8px;padding:12px 20px;font-size:1.1rem;border:none;border-radius:12px;background:#00bcd4;color:#fff;cursor:pointer;transition:transform .3s;
     }
     .buttons button:hover,#play-btn:hover{transform:scale(1.1) rotate(1deg);background:#0097a7;}
@@ -22,27 +24,29 @@
       width:80vw;max-width:350px;height:50vh;max-height:300px;
       background:rgba(255,255,255,0.1);border-radius:20px;
       backdrop-filter:blur(10px);box-shadow:0 8px 20px rgba(0,0,0,0.5);
-      margin-bottom:10px;perspective:1000px;transform-style:preserve-3d;
+      perspective:1000px;transform-style:preserve-3d;transition:transform .4s;
+      margin-bottom:10px;
     }
+    .card:active{transform:rotateY(8deg) rotateX(8deg) scale(0.98);}
     #letter-container{font-size:25vw;max-width:90%;text-shadow:0 0 25px #fff;cursor:pointer;user-select:none;}
-    .celebration{
-      position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
-      font-size:2rem;font-weight:bold;text-shadow:0 0 10px #fff;
-      animation:fadeout 2s forwards;
-    }
-    @keyframes fadeout{
-      0%{opacity:1;transform:translate(-50%,-50%) scale(1);}
-      100%{opacity:0;transform:translate(-50%,-50%) scale(2);}
-    }
-    footer{position:fixed;bottom:8px;width:100%;font-size:.85rem;color:#ddd;text-shadow:0 0 3px #000;}
+    footer{position:fixed;bottom:8px;width:100%;font-size:.85rem;color:#ddd;text-shadow:0 0 3px #000;display:flex;align-items:center;justify-content:center;gap:6px;}
+    footer img{width:30px;height:30px;border-radius:50%;object-fit:cover;border:2px solid #fff;}
     @media (max-width:600px){
       .title{font-size:1.5rem;}#letter-container{font-size:35vw;}
+      .buttons button,#play-btn{font-size:1rem;padding:10px 14px;}
+      footer img{width:24px;height:24px;}
+    }
+    .phrase{
+      position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+      font-size:2rem;font-weight:bold;text-shadow:0 0 12px #000;opacity:0;
+      transition:opacity .5s,transform .5s;
+      z-index:99;
     }
   </style>
 </head>
 <body>
   <video id="bg-video" autoplay muted loop playsinline>
-    <source src="" type="video/mp4"/>
+    <source src="VID_20250919_150128_178.mp4" type="video/mp4"/>
   </video>
   <canvas id="bg-canvas"></canvas>
   <div id="app">
@@ -67,17 +71,30 @@
     </div>
     <button id="play-btn" onclick="togglePlay()">▶ Play All</button>
   </div>
-  <footer>Developed by Aayush Singh</footer>
+  <footer>
+    <span>Developed by Aayush Singh</span>
+    <img src="developer.jpg" alt="Developer"/>
+  </footer>
 
   <script>
-    // Bubble background
+    // Service Worker
+    if('serviceWorker' in navigator){
+      const swBlob=new Blob([`
+        const CACHE='magic-cache-v6';
+        const FILES=['./','VID_20250919_150128_178.mp4'];
+        self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES))));
+        self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))));
+      `],{type:'text/javascript'});
+      const swURL=URL.createObjectURL(swBlob);
+      navigator.serviceWorker.register(swURL);
+    }
+
+    // Bubbles
     const canvas=document.getElementById('bg-canvas'),ctx=canvas.getContext('2d');
     let bubbles=[];
     function resizeCanvas(){canvas.width=innerWidth;canvas.height=innerHeight;}
     addEventListener('resize',resizeCanvas);resizeCanvas();
-    for(let i=0;i<60;i++){
-      bubbles.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*5+2,dx:(Math.random()-.5)*.6,dy:(Math.random()-.5)*.6});
-    }
+    for(let i=0;i<60;i++){bubbles.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*5+2,dx:(Math.random()-.5)*.6,dy:(Math.random()-.5)*.6});}
     function drawBubbles(){
       ctx.clearRect(0,0,canvas.width,canvas.height);
       ctx.fillStyle='rgba(255,255,255,.3)';
@@ -94,10 +111,9 @@
     const letters='ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
     const numbers=Array.from({length:100},(_,i)=>(i+1).toString());
     const hindi=['क','ख','ग','घ','ङ','च','छ','ज','झ','ञ','ट','ठ','ड','ढ','ण','त','थ','द','ध','न','प','फ','ब','भ','म','य','र','ल','व','श','ष','स','ह','क्ष','त्र','ज्ञ'];
-    const milestones=['10','20','30','40','50','60','70','80','90','100'];
-    const cheers=["Well done!","Keep it up!","Woohoo!","Fantastic!","Awesome!","Great job!","Amazing!"];
-
     let currentList=[],index=0,currentType='',playing=false,playInterval;
+
+    const phrases=["Well done!","Keep it up!","Whooow!","Great job!","Fantastic!","Awesome!","You're amazing!","Brilliant!","Superb!","Excellent!"];
 
     function startLearning(type){
       currentType=type;
@@ -106,24 +122,23 @@
       index=0;showLetter();
       stopPlay();
     }
-
     function showLetter(){
       const container=document.getElementById('letter-container');
       container.style.color=getRandomColor();
       container.textContent=currentList[index];
       speakLetter(currentList[index]);
-      // Check milestones for numbers
-      if(currentType==='numbers' && milestones.includes(currentList[index])){
-        triggerCelebration();
+
+      // Special praise for multiples of 10 in numbers
+      if(currentType==='numbers' && parseInt(currentList[index])%10===0){
+        showPhrase();
+        createBlast(innerWidth/2,innerHeight/2);
       }
     }
-
     function nextLetter(){
       index=(index+1)%currentList.length;
       showLetter();
       if(index===0 && playing){stopPlay();}
     }
-
     function getRandomColor(){return`hsl(${Math.random()*360},80%,60%)`;}
 
     function speakLetter(letter){
@@ -136,6 +151,12 @@
       const voices=speechSynthesis.getVoices();
       utter.voice=voices.find(v=>voiceType==='male'?v.name.toLowerCase().includes('male')||v.name.includes('David'):v.name.toLowerCase().includes('female')||v.name.includes('Zira'))||voices[0];
       speechSynthesis.cancel();speechSynthesis.speak(utter);
+
+      if(currentType==='numbers' && parseInt(letter)%10===0){
+        const praise=phrases[Math.floor(Math.random()*phrases.length)];
+        const praiseUtter=new SpeechSynthesisUtterance(praise);
+        speechSynthesis.speak(praiseUtter);
+      }
     }
 
     function blastLetter(e){
@@ -143,7 +164,6 @@
       createBlast(e.clientX,e.clientY);
       setTimeout(nextLetter,300);
     }
-
     function createBlast(x,y){
       for(let i=0;i<25;i++){
         const div=document.createElement('div');
@@ -158,26 +178,16 @@
       }
     }
 
-    function triggerCelebration(){
-      // Choose random cheer
-      const cheer=cheers[Math.floor(Math.random()*cheers.length)];
-      // Display message
-      const msg=document.createElement('div');
-      msg.className='celebration';
-      msg.textContent=cheer;
-      msg.style.color=getRandomColor();
-      document.body.appendChild(msg);
-      setTimeout(()=>msg.remove(),2000);
-      // Voice feedback
-      const utter=new SpeechSynthesisUtterance(cheer);
-      utter.lang='en-US';
-      speechSynthesis.speak(utter);
-      // Blast effect at random position
-      const x=Math.random()*window.innerWidth,y=Math.random()*window.innerHeight;
-      createBlast(x,y);
+    function showPhrase(){
+      const phrase=document.createElement('div');
+      phrase.className='phrase';
+      phrase.textContent=phrases[Math.floor(Math.random()*phrases.length)];
+      document.body.appendChild(phrase);
+      setTimeout(()=>{phrase.style.opacity=1;phrase.style.transform='translate(-50%,-50%) scale(1.2)';},50);
+      setTimeout(()=>{phrase.style.opacity=0;},1500);
+      setTimeout(()=>{phrase.remove();},2000);
     }
 
-    // Play all
     function togglePlay(){
       if(playing){stopPlay();return;}
       if(!currentList.length)return;
